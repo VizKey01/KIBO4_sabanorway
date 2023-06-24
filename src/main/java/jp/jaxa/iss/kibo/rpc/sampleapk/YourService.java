@@ -17,6 +17,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 
+//Java library
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,7 +29,7 @@ import java.util.List;
 
 public class YourService extends KiboRpcService {
 
-    double[][] target = {{0,0,0},//NULL
+    double[][] target = {{10.912, -8.551, 5.29},//NULL test pointB
                         {11.2325, -10.15, 5.4725},//tar1
                         {10.615384, -9.115172, 4.46203},//tar2
                         {10.71, -7.765, 4.42},//tar3
@@ -41,6 +42,7 @@ public class YourService extends KiboRpcService {
                         {9.815, -9.806, 4.293},//start
                         {11.143,-6.7607,4.9654}//Goal
     };
+
 
     float[][] quater =  {{0,0,0,0},//NULL
                         {0f, 0f, 0.707f, -0.707f},//tar1
@@ -106,7 +108,7 @@ public class YourService extends KiboRpcService {
 
     @Override
     protected void runPlan1(){
-        // write your plan 2 here
+
         api.startMission();
         solution();
 
@@ -170,10 +172,6 @@ public class YourService extends KiboRpcService {
                     }
                 }
                 Checkpoint(key);
-                /*
-                Log.i("Remove", "index Remove = " + Integer.valueOf(key));
-                list.remove(Integer.valueOf(key));
-                */
             }
 
             /*
@@ -396,7 +394,7 @@ public class YourService extends KiboRpcService {
         return key;
     }
 
-    private void solution(){
+    private void solution() {
 
         // Node
         int v = 12;
@@ -409,6 +407,14 @@ public class YourService extends KiboRpcService {
 
         //| 1 - 6 = target | 7 = A | 8 = B | 9 = QR | 10 = start | 11 = end |
 
+        //New point B
+        add_edge(adj, 0, 1);
+        add_edge(adj, 0, 2);
+        add_edge(adj, 0, 3);
+        add_edge(adj, 0, 4);
+        add_edge(adj, 0, 5);
+        add_edge(adj, 0, 6);
+
         //Tar1
         add_edge(adj, 1, 4);
         add_edge(adj, 1, 5);
@@ -416,11 +422,13 @@ public class YourService extends KiboRpcService {
         add_edge(adj, 1, 7);
         add_edge(adj, 1, 8);
         //tar2
+
         add_edge(adj, 2, 5);
         //add_edge(adj, 2, 6);
         add_edge(adj, 2, 7);
         //tar3
         //add_edge(adj, 3, 4);
+
         add_edge(adj, 3, 8);
 
         //tar4
@@ -441,6 +449,7 @@ public class YourService extends KiboRpcService {
         add_edge(adj, 9, 7);
         add_edge(adj, 9, 10);
         //start
+        add_edge(adj, 10, 1);
         add_edge(adj, 10, 2);
         add_edge(adj, 10, 6);
         add_edge(adj, 10, 7);
@@ -448,25 +457,28 @@ public class YourService extends KiboRpcService {
         add_edge(adj, 11, 3);
         add_edge(adj, 11, 4);
         add_edge(adj, 11, 5);
+        add_edge(adj, 11, 6);
         add_edge(adj, 11, 7);
         add_edge(adj, 11, 8);
 
         //---------------start--------------\\
 
-        //start == Curr, end == key,v == node
+        //start == Curr, end == key, v == node
 
         int loop_counter = 0;
         while (true){
-            // get the list of active target id
-            // move to a point
 
+            // get the list of active target id
             List<Integer> list = api.getActiveTargets();
             int n = list.size();
+
+            //debug
             Log.i("klekle", "n = " + n);
             for(int i=0;i<n;i++){
                 Log.i("klekle", "kle index " + i + " = " + list.get(i));
             }
-            int key = 0,copykey = 0;
+
+            int key,copykey = 0;
             for (int i = 0; i < n; i++) {
                 //Cut Function
                 if(Shooting_count == 7){
@@ -485,8 +497,6 @@ public class YourService extends KiboRpcService {
                     }
                 }
                 findShortestDistance(adj, current_key, key, v);
-
-
             }
 
 
@@ -502,36 +512,29 @@ public class YourService extends KiboRpcService {
             }
             loop_counter++;
         }
-
     }
 
-    private void add_edge(ArrayList<ArrayList<Integer>> adj, int i, int j)
-    {
+    private void add_edge(ArrayList<ArrayList<Integer>> adj, int i, int j) {
         adj.get(i).add(j);
         adj.get(j).add(i);
     }
 
-    // function to print the shortest distance and path
-    // between source vertex and destination vertex
     private void findShortestDistance(
             ArrayList<ArrayList<Integer>> adj,
-            int s, int dest, int v)
-    {
-        // predecessor[i] array stores predecessor of
-        // i and distance array stores distance of i
-        // from s
+            int s, int dest, int v) {
+        // stores predecessor path and distant
         int pred[] = new int[v];
         int dist[] = new int[v];
 
         BFS(adj, s, dest, v, pred, dist);
 
-        // LinkedList to store path
+        //store path
         LinkedList<Integer> path = new LinkedList<Integer>();
-        int crawl = dest;
-        path.add(crawl);
-        while (pred[crawl] != -1) {
-            path.add(pred[crawl]);
-            crawl = pred[crawl];
+        int tem = dest;
+        path.add(tem);
+        while (pred[tem] != -1) {
+            path.add(pred[tem]);
+            tem = pred[tem];
         }
 
         for (int i = path.size() - 2; i >= 0; i--) {
@@ -544,34 +547,23 @@ public class YourService extends KiboRpcService {
         Shooting_point(current_key);
     }
 
-    // a modified version of BFS that stores predecessor
-    // of each vertex in array pred
-    // and its distance from source in array dist
+    //BFS stores predecessor
     private boolean BFS(ArrayList<ArrayList<Integer>> adj, int src,
                                int dest, int v, int pred[], int dist[])
     {
-        // a queue to maintain queue of vertices whose
-        // adjacency list is to be scanned as per normal
-        // BFS algorithm using LinkedList of Integer type
+
         LinkedList<Integer> queue = new LinkedList<Integer>();
 
-        // boolean array visited[] which stores the
-        // information whether ith vertex is reached
-        // at least once in the Breadth first search
         boolean visited[] = new boolean[v];
 
-        // initially all vertices are unvisited
-        // so v[i] for all i is false
-        // and as no path is yet constructed
-        // dist[i] for all i set to infinity
+        // set Value default
         for (int i = 0; i < v; i++) {
             visited[i] = false;
             dist[i] = Integer.MAX_VALUE;
             pred[i] = -1;
         }
 
-        // now source is first to be visited and
-        // distance from source to itself should be 0
+        //start point
         visited[src] = true;
         dist[src] = 0;
         queue.add(src);
@@ -586,8 +578,7 @@ public class YourService extends KiboRpcService {
                     pred[adj.get(u).get(i)] = u;
                     queue.add(adj.get(u).get(i));
 
-                    // stopping condition (when we find
-                    // our destination)
+                    // found the destination
                     if (adj.get(u).get(i) == dest)
                         return true;
                 }
