@@ -5,7 +5,7 @@
 <h3>Implement in JAVA langg</h3>
 
 
-## Source 🔥 :
+## Leader Board 🔥 :
 https://www.nstda.or.th/spaceeducation/kibo-rpc-2023-score/
 
 <br>
